@@ -1,0 +1,88 @@
+using System;
+using System.Diagnostics;
+using System.Timers;
+using System.IO;
+
+namespace SystemMonitor
+{
+    class Program
+    {
+        private static EventLog eventLog;
+        private static PerformanceCounter cpuCounter;
+        private static PerformanceCounter ramCounter;
+
+        static void Main(string[] args)
+        {
+            // Inicjalizacja liczników
+            InitializeCounters();
+
+            // Inicjalizacja dziennika zdarzeń
+            InitializeEventLog();
+
+            // Uruchomienie monitorowania
+            StartMonitoring();
+
+            Console.WriteLine("Naciśnij dowolny klawisz, aby zakończyć...");
+            Console.ReadKey();
+
+            // Zatrzymanie monitorowania
+            StopMonitoring();
+
+            // Zamknięcie dziennika zdarzeń
+            eventLog.Dispose();
+        }
+
+        private static void InitializeCounters()
+        {
+            cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+        }
+
+        private static void InitializeEventLog()
+        {
+            string sourceName = "SystemMonitor";
+            string logName = "Application";
+
+            if (!EventLog.SourceExists(sourceName))
+            {
+                EventLog.CreateEventSource(sourceName, logName);
+            }
+
+            eventLog = new EventLog();
+            eventLog.Source = sourceName;
+        }
+
+        private static void StartMonitoring()
+        {
+            Timer timer = new Timer(5000); // co 5 sekund
+            timer.Elapsed += OnTimedEvent;
+            timer.AutoReset = true;
+            timer.Enabled = true;
+        }
+
+        private static void StopMonitoring()
+        {
+            // Zatrzymaj liczniki
+            cpuCounter.Dispose();
+            ramCounter.Dispose();
+        }
+
+        private static void OnTimedEvent(object sender, ElapsedEventArgs e)
+        {
+            float cpuUsage = cpuCounter.NextValue();
+            float ramUsage = ramCounter.NextValue();
+
+            Console.WriteLine($"CPU Usage: {cpuUsage}%");
+            Console.WriteLine($"RAM Usage: {ramUsage} MB");
+
+            // Zapisz zdarzenie do dziennika zdarzeń
+            string message = $"CPU Usage: {cpuUsage}%\nRAM Usage: {ramUsage} MB";
+            WriteEventToEventLog(message);
+        }
+
+        private static void WriteEventToEventLog(string message)
+        {
+            eventLog.WriteEntry(message, EventLogEntryType.Information);
+        }
+    }
+}
