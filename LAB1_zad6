@@ -1,0 +1,34 @@
+using System;
+using System.IO;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Podaj ścieżkę do pliku źródłowego:");
+        string sourceFilePath = Console.ReadLine();
+
+        Console.WriteLine("Podaj ścieżkę do pliku docelowego:");
+        string destinationFilePath = Console.ReadLine();
+
+        try
+        {
+            // Otwarcie pliku źródłowego w trybie do odczytu
+            using (FileStream sourceStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read))
+            {
+                // Otwarcie pliku docelowego w trybie do zapisu
+                using (FileStream destinationStream = new FileStream(destinationFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    // Kopiowanie danych z pliku źródłowego do pliku docelowego
+                    sourceStream.CopyTo(destinationStream);
+                }
+            }
+
+            Console.WriteLine("Kopiowanie zakończone pomyślnie.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Wystąpił błąd podczas kopiowania pliku: " + ex.Message);
+        }
+    }
+}
