@@ -1,0 +1,78 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+
+class Program
+{
+    static void Main()
+    {
+        // Ścieżka do pliku źródłowego i docelowego
+        string sourceFilePath = "source.dat";
+        string destinationFilePath = "destination.dat";
+
+        // Generowanie pliku źródłowego o rozmiarze 300 MB
+        GenerateLargeFile(sourceFilePath, 300 * 1024 * 1024);
+
+        // Przeprowadzenie testów kopiowania za pomocą różnych metod
+        TestFileCopying(sourceFilePath, destinationFilePath);
+    }
+
+    static void GenerateLargeFile(string filePath, long sizeInBytes)
+    {
+        byte[] data = new byte[1024];
+        Random rng = new Random();
+        using (FileStream fs = new FileStream(filePath, FileMode.Create))
+        {
+            for (long i = 0; i < sizeInBytes / 1024; i++)
+            {
+                rng.NextBytes(data);
+                fs.Write(data, 0, data.Length);
+            }
+        }
+    }
+
+    static void TestFileCopying(string sourceFilePath, string destinationFilePath)
+    {
+        // Metoda 1: FileStream
+        Stopwatch stopwatch1 = Stopwatch.StartNew();
+        using (FileStream sourceStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read))
+        {
+            using (FileStream destinationStream = new FileStream(destinationFilePath, FileMode.Create, FileAccess.Write))
+            {
+                sourceStream.CopyTo(destinationStream);
+            }
+        }
+        stopwatch1.Stop();
+        Console.WriteLine("Czas kopiowania za pomocą FileStream: " + stopwatch1.Elapsed);
+
+        // Metoda 2: File.Copy
+        Stopwatch stopwatch2 = Stopwatch.StartNew();
+        File.Copy(sourceFilePath, destinationFilePath, true);
+        stopwatch2.Stop();
+        Console.WriteLine("Czas kopiowania za pomocą File.Copy: " + stopwatch2.Elapsed);
+
+        // Metoda 3: File.WriteAllBytes
+        Stopwatch stopwatch3 = Stopwatch.StartNew();
+        byte[] fileBytes = File.ReadAllBytes(sourceFilePath);
+        File.WriteAllBytes(destinationFilePath, fileBytes);
+        stopwatch3.Stop();
+        Console.WriteLine("Czas kopiowania za pomocą File.WriteAllBytes: " + stopwatch3.Elapsed);
+
+        // Metoda 4: File.WriteAllBytes (za pomocą bufora)
+        Stopwatch stopwatch4 = Stopwatch.StartNew();
+        byte[] buffer = new byte[1024 * 1024];
+        using (FileStream sourceStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read))
+        {
+            using (FileStream destinationStream = new FileStream(destinationFilePath, FileMode.Create, FileAccess.Write))
+            {
+                int bytesRead;
+                while ((bytesRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    destinationStream.Write(buffer, 0, bytesRead);
+                }
+            }
+        }
+        stopwatch4.Stop();
+        Console.WriteLine("Czas kopiowania za pomocą FileStream z buforem: " + stopwatch4.Elapsed);
+    }
+}
