@@ -1,0 +1,86 @@
+using System;
+using System.IO;
+
+[Serializable]
+class UserData
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public string Address { get; set; }
+}
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Wybierz opcję:");
+        Console.WriteLine("1. Zapisz dane do pliku");
+        Console.WriteLine("2. Odczytaj dane z pliku");
+        string choice = Console.ReadLine();
+
+        if (choice == "1")
+        {
+            SaveData();
+        }
+        else if (choice == "2")
+        {
+            ReadData();
+        }
+        else
+        {
+            Console.WriteLine("Nieprawidłowa opcja.");
+        }
+    }
+
+    static void SaveData()
+    {
+        UserData userData = new UserData();
+
+        Console.Write("Podaj imię: ");
+        userData.Name = Console.ReadLine();
+
+        Console.Write("Podaj wiek: ");
+        userData.Age = int.Parse(Console.ReadLine());
+
+        Console.Write("Podaj adres: ");
+        userData.Address = Console.ReadLine();
+
+        using (FileStream fs = new FileStream("userdata.bin", FileMode.Create, FileAccess.Write))
+        {
+            using (BinaryWriter writer = new BinaryWriter(fs))
+            {
+                writer.Write(userData.Name);
+                writer.Write(userData.Age);
+                writer.Write(userData.Address);
+            }
+        }
+
+        Console.WriteLine("Dane zostały zapisane do pliku.");
+    }
+
+    static void ReadData()
+    {
+        if (!File.Exists("userdata.bin"))
+        {
+            Console.WriteLine("Plik nie istnieje.");
+            return;
+        }
+
+        UserData userData = new UserData();
+
+        using (FileStream fs = new FileStream("userdata.bin", FileMode.Open, FileAccess.Read))
+        {
+            using (BinaryReader reader = new BinaryReader(fs))
+            {
+                userData.Name = reader.ReadString();
+                userData.Age = reader.ReadInt32();
+                userData.Address = reader.ReadString();
+            }
+        }
+
+        Console.WriteLine("Odczytane dane:");
+        Console.WriteLine("Imię: " + userData.Name);
+        Console.WriteLine("Wiek: " + userData.Age);
+        Console.WriteLine("Adres: " + userData.Address);
+    }
+}
