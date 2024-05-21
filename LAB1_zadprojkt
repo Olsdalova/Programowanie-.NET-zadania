@@ -1,0 +1,177 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+
+class TaskManager
+{
+    private List<Task> tasks;
+
+    public TaskManager()
+    {
+        tasks = new List<Task>();
+    }
+
+    public void AddTask(Task task)
+    {
+        tasks.Add(task);
+    }
+
+    public void RemoveTask(int taskId)
+    {
+        Task taskToRemove = tasks.Find(task => task.Id == taskId);
+        if (taskToRemove != null)
+        {
+            tasks.Remove(taskToRemove);
+            Console.WriteLine("Zadanie usunięte.");
+        }
+        else
+        {
+            Console.WriteLine("Nie znaleziono zadania o podanym Id.");
+        }
+    }
+
+    public void DisplayTasks()
+    {
+        if (tasks.Count == 0)
+        {
+            Console.WriteLine("Lista zadań jest pusta.");
+        }
+        else
+        {
+            Console.WriteLine("Lista zadań:");
+            foreach (Task task in tasks)
+            {
+                Console.WriteLine(task);
+            }
+        }
+    }
+
+    public void SaveTasksToFile(string filePath)
+    {
+        string json = JsonConvert.SerializeObject(tasks);
+        File.WriteAllText(filePath, json);
+        Console.WriteLine("Lista zadań została zapisana do pliku.");
+    }
+
+    public void LoadTasksFromFile(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            string json = File.ReadAllText(filePath);
+            tasks = JsonConvert.DeserializeObject<List<Task>>(json);
+            Console.WriteLine("Lista zadań została wczytana z pliku.");
+        }
+        else
+        {
+            Console.WriteLine("Plik z listą zadań nie istnieje.");
+        }
+    }
+}
+
+class Task
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public DateTime DueDate { get; set; }
+    public bool IsCompleted { get; set; }
+
+    public override string ToString()
+    {
+        string status = IsCompleted ? "ukończone" : "nieukończone";
+        return $"Id: {Id}, Nazwa: {Name}, Opis: {Description}, Data zakończenia: {DueDate}, Status: {status}";
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        TaskManager taskManager = new TaskManager();
+        string filePath = "tasks.json";
+
+        while (true)
+        {
+            Console.WriteLine("\nMenu:");
+            Console.WriteLine("1. Dodaj zadanie");
+            Console.WriteLine("2. Usuń zadanie");
+            Console.WriteLine("3. Wyświetl listę zadań");
+            Console.WriteLine("4. Zapisz listę zadań do pliku");
+            Console.WriteLine("5. Wczytaj listę zadań z pliku");
+            Console.WriteLine("6. Wyjście");
+
+            Console.Write("Wybierz opcję: ");
+            string option = Console.ReadLine();
+
+            switch (option)
+            {
+                case "1":
+                    AddTask(taskManager);
+                    break;
+                case "2":
+                    RemoveTask(taskManager);
+                    break;
+                case "3":
+                    DisplayTasks(taskManager);
+                    break;
+                case "4":
+                    taskManager.SaveTasksToFile(filePath);
+                    break;
+                case "5":
+                    taskManager.LoadTasksFromFile(filePath);
+                    break;
+                case "6":
+                    Console.WriteLine("Koniec programu.");
+                    return;
+                default:
+                    Console.WriteLine("Nieprawidłowa opcja. Spróbuj ponownie.");
+                    break;
+            }
+        }
+    }
+
+    static void AddTask(TaskManager taskManager)
+    {
+        Console.WriteLine("Dodawanie nowego zadania:");
+        Console.Write("Podaj nazwę zadania: ");
+        string name = Console.ReadLine();
+        Console.Write("Podaj opis zadania: ");
+        string description = Console.ReadLine();
+        Console.Write("Podaj datę zakończenia zadania (RRRR-MM-DD): ");
+        DateTime dueDate;
+        while (!DateTime.TryParse(Console.ReadLine(), out dueDate))
+        {
+            Console.WriteLine("Nieprawidłowy format daty. Podaj ponownie (RRRR-MM-DD): ");
+        }
+
+        Task task = new Task
+        {
+            Id = taskManager.GetNewTaskId(),
+            Name = name,
+            Description = description,
+            DueDate = dueDate,
+            IsCompleted = false
+        };
+
+        taskManager.AddTask(task);
+        Console.WriteLine("Zadanie dodane.");
+    }
+
+    static void RemoveTask(TaskManager taskManager)
+    {
+        Console.Write("Podaj Id zadania do usunięcia: ");
+        int taskId;
+        while (!int.TryParse(Console.ReadLine(), out taskId))
+        {
+            Console.WriteLine("Nieprawidłowy format Id. Podaj ponownie: ");
+        }
+
+        taskManager.RemoveTask(taskId);
+    }
+
+    static void DisplayTasks(TaskManager taskManager)
+    {
+        taskManager.DisplayTasks();
+    }
+}
