@@ -1,0 +1,40 @@
+using System;
+using System.IO;
+
+class Program
+{
+    static void Main()
+    {
+        string filePath = "example.txt";  // Ścieżka do pliku tekstowego
+
+        // Sprawdzenie, czy plik istnieje
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine("Plik nie istnieje: " + filePath);
+            return;
+        }
+
+        // Otwieranie pliku za pomocą StreamReader
+        using (StreamReader reader = new StreamReader(filePath))
+        {
+            string line;
+
+            // Odczyt pliku linia po linii
+            while ((line = reader.ReadLine()) != null)
+            {
+                // Odwracanie linii
+                string reversedLine = ReverseString(line);
+
+                // Wyświetlanie odwróconej linii na konsoli
+                Console.WriteLine(reversedLine);
+            }
+        }
+    }
+
+    static string ReverseString(string input)
+    {
+        char[] charArray = input.ToCharArray();
+        Array.Reverse(charArray);
+        return new string(charArray);
+    }
+}
