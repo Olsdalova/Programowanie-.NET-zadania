@@ -1,0 +1,37 @@
+using System;
+using System.IO;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        string filePath = "example.txt";  // Ścieżka do pliku tekstowego
+
+        // Sprawdzenie, czy plik istnieje
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine("Plik nie istnieje: " + filePath);
+            return;
+        }
+
+        // Otwieranie pliku za pomocą FileStream
+        using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+        {
+            // Tworzenie bufora do odczytu danych
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            StringBuilder fileContent = new StringBuilder();
+
+            // Odczyt danych z pliku
+            while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                // Konwersja odczytanych bajtów na tekst
+                fileContent.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+            }
+
+            // Wyświetlenie zawartości pliku na konsoli
+            Console.WriteLine(fileContent.ToString());
+        }
+    }
+}
