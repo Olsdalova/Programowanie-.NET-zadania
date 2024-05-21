@@ -1,0 +1,51 @@
+using System;
+using System.Windows.Forms;
+
+namespace DivisionApp
+{
+    public partial class MainForm : Form
+    {
+        public MainForm()
+        {
+            InitializeComponent();
+        }
+
+        private void divideButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Pobierz dzielną i dzielnik z pól tekstowych
+                double dividend = Convert.ToDouble(dividendTextBox.Text);
+                double divisor = Convert.ToDouble(divisorTextBox.Text);
+
+                // Sprawdź, czy dzielnik jest różny od zera
+                if (divisor == 0)
+                {
+                    throw new DivideByZeroException("Nie można dzielić przez zero!");
+                }
+
+                // Wykonaj dzielenie
+                double result = dividend / divisor;
+
+                // Wyświetl wynik
+                resultTextBox.Text = result.ToString();
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("Wprowadzono nieprawidłową liczbę.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DivideByZeroException ex)
+            {
+                // Dodaj błąd do dziennika zdarzeń systemu Windows
+                EventLog.WriteEntry("Application", ex.Message, EventLogEntryType.Error);
+                MessageBox.Show(ex.Message, "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                // Obsługa ogólnego wyjątku
+                EventLog.WriteEntry("Application", ex.ToString(), EventLogEntryType.Error);
+                MessageBox.Show("Wystąpił nieoczekiwany błąd.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+}
