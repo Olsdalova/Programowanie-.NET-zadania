@@ -1,1 +1,151 @@
+// AES Encryption Utility
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+public static class AesEncryption
+{
+    private static readonly byte[] Key = Encoding.UTF8.GetBytes("your-encryption-key-here"); // 16, 24, or 32 bytes
+    private static readonly byte[] IV = Encoding.UTF8.GetBytes("your-iv-here"); // 16 bytes
+
+    public static byte[] Encrypt(string plainText)
+    {
+        using (Aes aes = Aes.Create())
+        {
+            aes.Key = Key;
+            aes.IV = IV;
+
+            ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                {
+                    using (StreamWriter sw = new StreamWriter(cs))
+                    {
+                        sw.Write(plainText);
+                    }
+                }
+                return ms.ToArray();
+            }
+        }
+    }
+
+    public static string Decrypt(byte[] cipherText)
+    {
+        using (Aes aes = Aes.Create())
+        {
+            aes.Key = Key;
+            aes.IV = IV;
+
+            ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+            using (MemoryStream ms = new MemoryStream(cipherText))
+            {
+                using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                {
+                    using (StreamReader sr = new StreamReader(cs))
+                    {
+                        return sr.ReadToEnd();
+                    }
+                }using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+
+class AsyncServer
+{
+    private const int Port = 5000;
+
+    public static async Task StartServerAsync()
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, Port);
+        listener.Start();
+        Console.WriteLine("Serwer uruchomiony, oczekiwanie na połączenia...");
+        while (true)
+        {
+            TcpClient client = await listener.AcceptTcpClientAsync();
+            Console.WriteLine("Połączono z klientem.");
+            _ = HandleClientAsync(client); // Fire-and-forget to handle the client
+        }
+    }
+
+    private static async Task HandleClientAsync(TcpClient client)
+    {
+        using (client)
+        {
+            NetworkStream stream = client.GetStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+            {
+                byte[] receivedData = new byte[bytesRead];
+                Array.Copy(buffer, 0, receivedData, 0, bytesRead);
+                string message = AesEncryption.Decrypt(receivedData);
+                Console.WriteLine($"Otrzymano: {message}");
+                byte[] response = AesEncryption.Encrypt($"Serwer otrzymał: {message}");
+                await stream.WriteAsync(response, 0, response.Length);
+            }
+        }
+        Console.WriteLine("Klient rozłączony.");
+    }
+
+    static async Task Main(string[] args)
+    {
+        await StartServerAsync();
+    }
+}
+
+// Asynchronous Chat Client with Encryption
+
+using System;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+
+class AsyncClient
+{
+    private const int Port = 5000;
+    private const string ServerIp = "127.0.0.1"; // Replace with your server's IP address
+
+    public static async Task StartClientAsync()
+    {
+        TcpClient client = new TcpClient();
+        await client.ConnectAsync(ServerIp, Port);
+        Console.WriteLine("Połączono z serwerem.");
+        using (NetworkStream stream = client.GetStream())
+        {
+            while (true)
+            {
+                Console.Write("Wpisz wiadomość do wysłania: ");
+                string message = Console.ReadLine();
+                if (string.IsNullOrEmpty(message))
+                    break;
+                byte[] data = AesEncryption.Encrypt(message);
+                await stream.WriteAsync(data, 0, data.Length);
+                byte[] buffer = new byte[1024];
+                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                byte[] receivedData = new byte[bytesRead];
+                Array.Copy(buffer, 0, receivedData, 0, bytesRead);
+                string response = AesEncryption.Decrypt(receivedData);
+                Console.WriteLine($"Odpowiedź serwera: {response}");
+            }
+        }
+        client.Close();
+        Console.WriteLine("Klient rozłączony.");
+    }
+
+    static async Task Main(string[] args)
+    {
+        await StartClientAsync();
+    }
+}
+
+            }
+        }
+    }
+}
+
+//Asynchronous Chat Server with Encryption
+
 
